@@ -4,9 +4,8 @@ import time
 
 import requests
 from selenium import webdriver
+from selenium.common.exceptions import ElementNotVisibleException
 from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.common.by import By
-
 
 URL_PREFIX = "https://hfut.xuetangx.com"
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.80 Safari/537.36"
@@ -14,10 +13,15 @@ USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTM
 SPEED_BUTTON_SELECTOR = "#video-box > div > div > div.xt_video_player_controls.cf.xt_video_player_controls_show > div.xt_video_player_speed.xt_video_player_common.fr > div"
 # 对应 2.5x 速度的按钮的 CSS 选择器
 SPEED_UP_BUTTON_SELECTOR = "#video-box > div > div > div.xt_video_player_controls.cf.xt_video_player_controls_show > div.xt_video_player_speed.xt_video_player_common.fr > ul > li:nth-child(1)"
-
+DEBUG = True
 
 def getTime():
-    return time.asctime(time.localtime(time.time()))
+    return time.asctime().split(' ')[3]
+
+
+def debugLog(mess):
+    if DEBUG:
+        print(f"\033[0;37m[\033[0;33mDEBUG\033[0;37m] {getTime()} {mess}")
 
 
 def getSess():
@@ -86,15 +90,18 @@ def getVideoLinks(driver, courseId):
 
 
 def speedUpVideo(driver):
-    print(f"[DEBUG] {getTime()} 正在尝试加速视频")
+    debugLog("正在尝试加速视频")
     while True:
         time.sleep(0.5)
         elements = driver.find_elements_by_css_selector(SPEED_BUTTON_SELECTOR)
         if elements:
             ActionChains(driver).move_to_element(elements[0]).perform()
             element = driver.find_element_by_css_selector(SPEED_UP_BUTTON_SELECTOR)
-            element.click()
-            break
+            try: # 如果点击不了重来
+                element.click()
+                break
+            except ElementNotVisibleException:
+                pass
         else:
             continue
 
@@ -118,10 +125,10 @@ def watchVideo(driver, link):
                 if times[1] == "0:00": # 若第二个时间是 0:00, 也没有加载完成
                     continue
                 if times[0] == times[1]:
-                    print(f"[DEBUG] {getTime()} 观看已完成 进度条状态为 {times}")
+                    debugLog(f"观看已完成, 进度条状态为 {times}")
                     break  # 如果时间相同, 播放完成
                 else:
-                    print(f"[DEBUG] {getTime()} 视频被暂停, 尝试点击")
+                    debugLog("视频被暂停, 尝试点击继续播放")
                     element = driver.find_element_by_class_name("xt_video_player_play_btn")
                     ActionChains(driver).move_to_element(element).perform()
                     element.click()
@@ -132,8 +139,8 @@ def watchVideo(driver, link):
 driver = getDriver()
 courses = getCourseId()
 for course in courses:
-    print(f"[DEBUG] {getTime()} 正在加载 {course['name']}")
+    debugLog(f"正在加载 {course['name']}")
     links = getVideoLinks(driver, course)
     for link in links:
-        print(f"[DEBUG] {getTime()} 正在观看 {URL_PREFIX + link}")
+        debugLog(f"正在观看 {URL_PREFIX + link}")
         watchVideo(driver, link)
