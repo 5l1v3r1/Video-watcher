@@ -70,8 +70,11 @@ def loadCookie(driver):
         driver.add_cookie(cookie)
 
 
-def getDriver():
-    driver = webdriver.Chrome()
+def getDriver(mute=True):
+    chromeOptions = webdriver.ChromeOptions()
+    if mute:
+        chromeOptions.add_argument("--mute-audio")
+    driver = webdriver.Chrome(options=chromeOptions)
     driver.get(URL_PREFIX)
     loadCookie(driver)
     return driver
