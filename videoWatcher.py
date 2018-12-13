@@ -73,6 +73,7 @@ def loadCookie(driver):
 def getDriver(mute=True):
     chromeOptions = webdriver.ChromeOptions()
     if mute:
+        debugLog("已开启静音")
         chromeOptions.add_argument("--mute-audio")
     driver = webdriver.Chrome(options=chromeOptions)
     driver.get(URL_PREFIX)
@@ -112,12 +113,26 @@ def speedUpVideo(driver):
 def watchVideo(driver, link):
     driver.get(URL_PREFIX + link)
     speedUpVideo(driver)
+
+    count = 0
+
     while True:
         time.sleep(0.5)
         element = driver.find_elements_by_class_name("xt_video_player_play_btn_pause")
         # 如果没有 xt_video_player_play_btn_pause 这个元素, 说明视频被暂停了
         if element:
-            pass
+            count += 1
+            if count == 60: # 每 30s log 一次
+                currentTime = "NaN / NaN"
+                speedRation = "NaN"
+                element = driver.find_elements_by_class_name("xt_video_player_current_time_display")
+                if element:
+                    currentTime = element[0].get_attribute('textContent')
+                element = driver.find_elements_by_class_name("xt_video_player_common_value")
+                if element:
+                    speedRation = element[0].get_attribute('textContent')
+                debugLog(f"当前进度 [{currentTime}], 速度倍率 [{speedRation}]")
+                count = 0
         else:
             element = driver.find_elements_by_class_name("xt_video_player_current_time_display")
             # 如果暂停了, 先检查是否视频播放完成, 没有播放完成点播放键
@@ -128,7 +143,7 @@ def watchVideo(driver, link):
                 if times[1] == "0:00": # 若第二个时间是 0:00, 也没有加载完成
                     continue
                 if times[0] == times[1]:
-                    debugLog(f"观看已完成, 进度条状态为 {times}")
+                    debugLog(f"观看已完成, 进度条状态为 [{' / '.join(times)}]")
                     break  # 如果时间相同, 播放完成
                 else:
                     debugLog("视频被暂停, 尝试点击继续播放")
@@ -139,11 +154,13 @@ def watchVideo(driver, link):
                 continue  # 如果播放时间不存在, 说明这个页面没加载完
 
 
-driver = getDriver()
-courses = getCourseId()
-for course in courses:
-    debugLog(f"正在加载 {course['name']}")
-    links = getVideoLinks(driver, course)
-    for link in links:
-        debugLog(f"正在观看 {URL_PREFIX + link}")
-        watchVideo(driver, link)
+if __name__ == "__main__":
+    debugLog(f"使用过程中请不要最小化窗口, 会导致无法继续播放")
+    driver = getDriver()
+    courses = getCourseId()
+    for course in courses:
+        debugLog(f"正在加载 [{course['name']}]")
+        links = getVideoLinks(driver, course)
+        for link in links:
+            debugLog(f"正在观看 [{URL_PREFIX + link}]")
+            watchVideo(driver, link)
