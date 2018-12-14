@@ -164,3 +164,6 @@ if __name__ == "__main__":
         for link in links:
             debugLog(f"正在观看 [{URL_PREFIX + link}]")
             watchVideo(driver, link)
+        debugLog(f"[{course['name']}] 播放完成")
+    debugLog("所有课程观看完毕, 退出中...")
+    driver.quit()
