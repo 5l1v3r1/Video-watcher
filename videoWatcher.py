@@ -88,7 +88,7 @@ def getVideoLinks(driver, courseId):
     info = getCourseInfo(courseid, classid)['coursewareArray']
     result = list()
     for i in info:
-        if not i["done"] and i["type"] == 0:  # 如果 'items' 不在 i['children'] 里面, 是作业而不是视频
+        if not i["done"] and i["type"] == 0:  # 如果 type == 0, 为视频
             result.append(f"/lms#/video/{courseid}/{classid}/{i['unit_id']}/{i['children']['items']['item_id']}/0/videoDiscussion")
     return result
 
