@@ -1,4 +1,5 @@
 import json
+import os
 import re
 import time
 
@@ -13,6 +14,7 @@ USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTM
 SPEED_BUTTON_SELECTOR = "#video-box > div > div > div.xt_video_player_controls.cf.xt_video_player_controls_show > div.xt_video_player_speed.xt_video_player_common.fr > div"
 # 对应 2.5x 速度的按钮的 CSS 选择器
 SPEED_UP_BUTTON_SELECTOR = "#video-box > div > div > div.xt_video_player_controls.cf.xt_video_player_controls_show > div.xt_video_player_speed.xt_video_player_common.fr > ul > li:nth-child(1)"
+MUTE = True
 DEBUG = True
 
 def getTime():
@@ -21,7 +23,10 @@ def getTime():
 
 def debugLog(mess):
     if DEBUG:
-        print(f"\033[0;37m[\033[0;33mDEBUG\033[0;37m] {getTime()} {mess}")
+        if os.name == "posix":
+            print(f"\033[0;37m[\033[0;33mDEBUG\033[0;37m] {getTime()} {mess}")
+        else:
+            print(f"[DEBUG] {getTime()} {mess}")
 
 
 def getSess():
@@ -70,9 +75,9 @@ def loadCookie(driver):
         driver.add_cookie(cookie)
 
 
-def getDriver(mute=True):
+def getDriver():
     chromeOptions = webdriver.ChromeOptions()
-    if mute:
+    if MUTE:
         debugLog("已开启静音")
         chromeOptions.add_argument("--mute-audio")
     driver = webdriver.Chrome(options=chromeOptions)
