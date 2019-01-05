@@ -18,7 +18,7 @@ MUTE = True
 DEBUG = True
 
 def getTime():
-    return time.asctime().split(' ')[3]
+    return time.asctime()[11:19]
 
 
 def debugLog(mess):
